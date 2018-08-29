@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            ul,li {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            a {
+                text-decoration: none;
+                font-family: 'SimHei','SimSun';
+            }
+
+            .carousel {
+                position: relative;
+                width: 300px;
+                height: 200px;
+                margin: 10px;
+                overflow: hidden;
+            }
+
+            .carousel .img-list {
+                position: absolute;
+                width: 1800px;
+                height: 200px;
+            }
+
+            .carousel .img-list:after {
+                content: "";
+                display: block;
+                clear: both;
+            }
+
+            .carousel .img-list img {
+                width: 300px;
+                height: 200px;
+            }
+
+            .carousel .img-list li {
+                float: left;
+                display: none;
+            }
+
+            .carousel .btn {
+                position: absolute;
+                top: 50%;
+                margin-top: -15px;
+                width: 30px;
+                height: 30px;
+                text-align: center;
+                line-height: 30px;
+                border-radius: 50%;
+                background-color: #333;
+                color: #fff;
+                opacity: 0.8;
+                display: block;
+            }
+
+            .carousel .btn-pre {
+                left: 10px;
+            }
+
+            .carousel .btn-next {
+                right: 10px;
+            }
+
+            .carousel .dot-list {
+                position: absolute;
+                bottom: 20px;
+                left: 0;
+                right: 0;
+                text-align: center;
+            }
+
+            .carousel .dot {
+                display: inline-block;
+            }
+
+            .carousel .dot>li {
+                /*float: left;*/
+                display: inline-block;
+                width: 20px;
+                height: 6px;
+                margin: 0 5px;
+                border-radius: 3px;
+                background-color: #fff;
+                cursor: pointer;
+            }
+
+            .carousel .dot .active {
+                background-color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="carousel">
+            <ul class="img-list">
+                <li data-index=0>
+                    <a href="#">
+                        <img src="tempImg/2.jpg" alt="1.jpg">
+                    </a>
+                </li>
+                <li data-index=1>
+                    <a href="#">
+                        <img src="tempImg/3.jpg" alt="2.jpg">
+                    </a>
+                </li>
+                <li data-index=2>
+                    <a href="#">
+                        <img src="tempImg/4.jpg" alt="3.jpg">
+                    </a>
+                </li>
+                <li data-index=3>
+                    <a href="#">
+                        <img src="tempImg/5.jpg" alt="4.jpg">
+                    </a>
+                </li>
+            </ul>
+            <a class="btn btn-pre" href="#">&lt;</a>
+            <a class="btn btn-next" href="#">&gt;</a>
+            <div class="dot-list">
+                <ul class="dot">
+                    <li class="active"></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                </ul>
+            </div>
+        </div>
+
+        <script src="./jquery/jquery-3.1.1.min.js" type="text/javascript"></script>
+
+        <script type="text/javascript">
+
+            class Carousel{
+
+                constructor(oTarget){
+
+                    this.oUl = oTarget.getElementsByClassName('img-list')[0];
+                    this.aLi = this.oUl.getElementsByTagName('li');
+                    this.oBtnPre = oTarget.getElementsByClassName('btn-pre')[0];
+                    this.oBtnNext = oTarget.getElementsByClassName('btn-next')[0];
+                    this.oDot = oTarget.getElementsByClassName('dot')[0];
+                    this.aDotLi = this.oDot.getElementsByTagName('li');
+                    this.nNow = 0;
+                    this.lockPre = false;//防抖动
+                    this.lockNext = false;
+                    this.lockClick = false;
+
+                    this.init();
+                }
+
+                init(){
+
+                    this.aLi[0].style.display = 'block';
+                    $(this.oBtnPre).on('click', () => {
+
+                        if(this.lockPre) return;
+                        this.lockPre = true;
+
+                        this.liSwitch('pre');
+                    });
+
+                    $(this.oBtnNext).on('click', () => {
+
+                        if(this.lockNext) return;
+                        this.lockNext = true;
+
+                        this.liSwitch('next');
+                    });
+
+                    $(this.oDot).on('click', 'li', (ev = window.event) => {
+
+                        if(this.lockClick) return;
+                        this.lockClick = true;
+
+                        this.liSwitch('dotClick', $(ev.target? ev.target: ev.srcElement).index());
+                    });
+                }
+
+                dotSwitch(){
+
+                    $(this.aDotLi).each(function(){
+
+                        this.className = '';
+                    });
+                    this.aDotLi[this.nNow].className = 'active';
+                }
+
+                liSwitch(){
+
+                    let aArg = arguments;
+                    $(this.aLi[this.nNow]).fadeOut('fast', () => {
+
+                            switch (aArg[0])
+                            {
+                                case 'pre':
+                                    this.nNow = (this.nNow - 1 + 4) % 4;
+                                break;
+
+                                case 'next':
+                                    this.nNow = (this.nNow + 1) % 4;
+                                break;
+
+                                case 'dotClick':
+                                    this.nNow = aArg[1];
+                                break;
+                            }
+                            $(this.aLi[this.nNow]).fadeIn('fast', () => {
+
+                                this.dotSwitch();
+                                switch (aArg[0])
+                                {
+                                    case 'pre':
+                                        this.lockPre = false;
+                                    break;
+
+                                    case 'next':
+                                        this.lockNext = false;
+                                    break;
+
+                                    case 'dotClick':
+                                        this.lockClick = false;
+                                    break;
+                                }
+                            });
+                    });
+                }
+            }
+
+            $(document).ready(function() {
+
+                let oCar = document.getElementsByClassName('carousel')[0];
+                new Carousel(oCar);
+            });
+        </script>
+    </body>
+</html>

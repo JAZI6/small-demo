@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>木桶布局</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+
+            .img-preview {
+                width: 1000px;
+                margin: 10px auto;
+            }
+
+            .img-row {
+                margin-bottom: 8px;
+            }
+
+            .img-row:after {
+                content: "";
+                display: block;
+                clear: both;
+            }
+
+            .img-box {
+                float: left;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="img-preview"></div>
+        <!--
+    <div class="img-row">
+      <div class="img-box">
+        <img src="" alt="">
+      </div>
+    </div>
+    <div class="img-row">
+      <div class="img-box"></div>
+    </div>
+    <div class="img-row">
+      <div class="img-box"></div>
+    </div>
+    -->
+        <script src="./jquery/jquery-3.1.1.min.js" type="text/javascript"></script>
+        <script>
+            class Barrel {
+
+                constructor(oTarget) {
+                    this.oCtn = oTarget;
+                    this.nMax = 30;
+                    this.nCount = 0;
+                    this.baseHeight = 200;
+                    this.nCtnWidth = $(this.oCtn).width();
+                    this.nRowWidth = 0;
+                    this.aRowList = [];
+                    this.newHeight = null;
+
+                    this.init();
+                }
+
+                init() {
+                    let aUrls = this.getUrls();
+                    this.loadSgImg(aUrls);
+                }
+
+                loadSgImg(aUrls) {
+                    let oImg = new Image(),
+                        oInfo = null;
+                    //load事件放在前面，防止img加载速度过快超过代码执行速度所导致的load事件函数失效。
+                    $(oImg).on('load', () => {
+                        oInfo = {
+                            oImg: oImg,
+                            height: this.baseHeight,
+                            width: this.baseHeight * (oImg.width / oImg.height)
+                        };
+                        this.layOut(oInfo);
+                        if(this.nCount == this.nMax) return;
+                        else this.loadSgImg(aUrls);
+                    });
+                    console.log(aUrls[this.nCount]);
+                    oImg.src = aUrls[this.nCount++];
+                }
+
+                getUrls() {
+                    let aTemp = [],
+                        nNum = null;
+                    for(let i = 0; i < this.nMax; i++)
+                    {
+                        nNum = Math.floor(Math.random() * 34 + 1);
+                        aTemp.push(`mtbj_img/${nNum}.jpg`);
+                    }
+                    return aTemp;
+                }
+
+                layOut(oInfo) {
+                    this.nRowWidth += oInfo.width;
+                    //console.log(this.nCtnWidth);
+                    if(this.nRowWidth > this.nCtnWidth)
+                    {
+                        this.nRowWidth -= oInfo.width;
+                        this.newHeight = (this.nCtnWidth / this.nRowWidth) * this.baseHeight;
+                        this.render(this.newHeight);
+                        this.aRowList.splice(0, this.aRowList.length);
+                        this.nRowWidth = 0;
+                        this.nRowWidth += oInfo.width;
+                    }
+                    this.aRowList.push(oInfo);
+                    if(this.nCount == this.nMax)
+                    {
+                        this.newHeight = (this.nCtnWidth / this.nRowWidth) * this.baseHeight;
+                        this.render(this.newHeight);
+                    }
+                }
+
+                render(newHeight) {
+                    let $row = $('<div class="img-row"></div>'),
+                        $imgBox = null,
+                        $img = null;
+
+                    $(this.aRowList).each(function(){
+                        $imgBox = $('<div class="img-box"></div>');
+                        $img = $(this.oImg);
+                        $img.height(newHeight);
+                        $imgBox.append($img);
+                        $row.append($imgBox);
+                    });
+
+                    $(this.oCtn).append($row);
+                }
+            }
+
+            $(document).ready(function() {
+                let oCtn = document.getElementsByClassName('img-preview')[0];
+                new Barrel(oCtn);
+            });
+        </script>
+    </body>
+</html>
